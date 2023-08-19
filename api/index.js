@@ -427,6 +427,19 @@ app.put("/user/update_password", async (req, res) => {
   }
 });
 
+// logout route
+app.post("/user/logout", (req, res) => {
+  try {
+    res
+      .clearCookie("loggedUser", { expires: new Date(0) })
+      .status(224)
+      .json({ name: "Logout", message: "Logout Success" });
+  } catch (error) {
+    console.error("error in line447", error);
+    res.status(400).json(error);
+  }
+});
+
 // mongoose connection and listening to port
 const PORT = process.env.PORT || 8080;
 mongoose
