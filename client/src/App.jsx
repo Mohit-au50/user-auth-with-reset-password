@@ -15,7 +15,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound404 from "./pages/NotFound404";
 
-axios.defaults.baseURL = "http://localhost:8080";
+axios.defaults.baseURL = "https://user-auth-u5y8.onrender.com";
 axios.defaults.withCredentials = true;
 
 const App = () => {
