@@ -11,10 +11,19 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
+const cors = require("cors");
 const app = express();
 
 // middlewares
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: "GET, POST, PUT, DELETE",
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 // Cloudinary config file
 cloudinary.config({
