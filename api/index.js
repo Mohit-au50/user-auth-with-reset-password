@@ -210,6 +210,28 @@ app.post("/user/login", async (req, res) => {
   }
 });
 
+// route to get the currect user using cookies
+app.get("/current_loggedInUser", async (req, res) => {
+  try {
+    const { loggedUser } = req.cookies;
+
+    if (!loggedUser)
+      return res.json({
+        name: "JsonWebToken Error",
+        message: "Please Login",
+      });
+
+    // verify the token, extract the values out of it and send it to the client
+    const verifiedUserToken = jwt.verify(loggedUser, process.env.JWT_SECRET);
+    if (!verifiedUserToken) return res.json("token is not authentic");
+
+    res.status(224).json(verifiedUserToken);
+  } catch (error) {
+    console.error("error in line244", error);
+    res.status(400).json(error);
+  }
+});
+
 // mongoose connection and listening to port
 const PORT = process.env.PORT || 8080;
 mongoose
