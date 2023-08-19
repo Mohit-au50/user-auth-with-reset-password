@@ -17,8 +17,7 @@ const app = express();
 // middlewares
 app.use(
   cors({
-    origin: "https://user-auth-delta.vercel.app/",
-    methods: "GET, POST, PUT, DELETE",
+    origin: "https://user-auth-delta.vercel.app",
     credentials: true,
   })
 );
