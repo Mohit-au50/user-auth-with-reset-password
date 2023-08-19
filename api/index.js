@@ -17,7 +17,7 @@ const app = express();
 // middlewares
 app.use(
   cors({
-    origin: "https://user-auth-delta.vercel.app",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -269,7 +269,7 @@ app.post("/user/request/reset_password", async (req, res) => {
       JWT_SECRET,
       { expiresIn: "10m" }
     );
-    const emailUrlLink = `http://localhost:8080/request/authenticate_url/${foundUserDoc._id}/${resetPasswordToken}`;
+    const emailUrlLink = `${process.env.BACKEND_URL}/request/authenticate_url/${foundUserDoc._id}/${resetPasswordToken}`;
 
     // create a config option for gmail
     const mailServiceConfig = {
@@ -289,7 +289,7 @@ app.post("/user/request/reset_password", async (req, res) => {
       product: {
         // appears in header and footer
         name: "Auth",
-        link: "http://localhost:5173",
+        link: process.env.FRONTEND_URL,
         // logo: "your product logo",
       },
     });
@@ -375,14 +375,14 @@ app.get(
             Authorization: `Bearer u19e189d${uniqueIdentifier} ${resetPasswordToken}`,
           })
         );
-        const redirectUrl = `http://localhost:5173/u/reset_password/${userId}?headers=${headers}`;
+        const redirectUrl = `${process.env.FRONTEND_URL}/u/reset_password/${userId}?headers=${headers}`;
         return res.redirect(redirectUrl);
       }
     } catch (error) {
       console.error("Error in line384", error);
       // redirect the user to 404 page with the error message
-      const redirectUrl = "http://localhost:5173/";
-      res.status(400).redirect(`${redirectUrl}${error.message}`);
+      const redirectUrl = process.env.FRONTEND_URL;
+      res.status(400).redirect(`${redirectUrl}/${error.message}`);
     }
   }
 );
@@ -454,7 +454,7 @@ mongoose
   .connect(process.env.MONGO_URL)
   .then(() => {
     console.log("mongodb connected");
-    app.listen(PORT, console.log(`server is live:  http://localhost:${PORT}`));
+    app.listen(PORT, console.log(`server is live: ${PORT}`));
   })
   .catch((error) => {
     console.error("An error occured while connecting", error);
