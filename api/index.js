@@ -379,6 +379,54 @@ app.get(
   }
 );
 
+// update the user password
+app.put("/user/update_password", async (req, res) => {
+  try {
+    const { userId, isAuthor, password } = req.body;
+
+    // find the user document with the userId
+    const foundUserDoc = await User.findOne({ _id: userId });
+    if (!foundUserDoc) {
+      return res.json({
+        name: "Document Not Found",
+        message: "User doesn't Exsits",
+      });
+    }
+    const tokenValue = isAuthor.slice(33, -2);
+    const resetPasswordToken = tokenValue.slice(8);
+
+    // verify the token
+    const JWT_SECRET = process.env.JWT_SECRET + foundUserDoc.password;
+    const verifyResetPasswordToken = jwt.verify(resetPasswordToken, JWT_SECRET);
+    if (verifyResetPasswordToken) {
+      // hash the user password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password.toString(), salt);
+      if (!hashedPassword) {
+        return res.json({
+          name: "Bcrypt Error",
+          message: "Password not hashed",
+        });
+      }
+      if (verifyResetPasswordToken.id === userId) {
+        // update the user password
+        const updateUserDoc = await User.findByIdAndUpdate(
+          userId,
+          { password: hashedPassword },
+          { new: true }
+        );
+        return res.status(224).json({
+          name: "Document Update",
+          message: "User updated succesfully",
+        });
+      }
+    }
+  } catch (error) {
+    console.error("error in line434", error);
+    res.status(400).json(error);
+  }
+});
+
 // mongoose connection and listening to port
 const PORT = process.env.PORT || 8080;
 mongoose
