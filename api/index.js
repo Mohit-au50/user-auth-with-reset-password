@@ -338,6 +338,47 @@ app.post("/user/request/reset_password", async (req, res) => {
   }
 });
 
+// this is the the url that we will send in the email, if hit it will create a token in the user browser
+app.get(
+  "/request/authenticate_url/:userId/:resetPasswordToken",
+  async (req, res) => {
+    try {
+      const { userId, resetPasswordToken } = req.params;
+
+      // find the userdocument with the id
+      const foundUserDoc = await User.findOne({ _id: userId });
+      if (!foundUserDoc)
+        return res.json({
+          name: "Document not found",
+          message: "User doesn't exsits",
+        });
+
+      // if user is found in the database then verify the token with the modified secret
+      const JWT_SECRET = process.env.JWT_SECRET + foundUserDoc.password;
+      const verifyResetPasswordToken = jwt.verify(
+        resetPasswordToken,
+        JWT_SECRET
+      );
+      if (verifyResetPasswordToken) {
+        // for additional security store the last 7 digits of userDocument _id
+        const uniqueIdentifier = userId.slice(-7);
+        const headers = encodeURIComponent(
+          JSON.stringify({
+            Authorization: `Bearer u19e189d${uniqueIdentifier} ${resetPasswordToken}`,
+          })
+        );
+        const redirectUrl = `http://localhost:5173/u/reset_password/${userId}?headers=${headers}`;
+        return res.redirect(redirectUrl);
+      }
+    } catch (error) {
+      console.error("Error in line384", error);
+      // redirect the user to 404 page with the error message
+      const redirectUrl = "http://localhost:5173/";
+      res.status(400).redirect(`${redirectUrl}${error.message}`);
+    }
+  }
+);
+
 // mongoose connection and listening to port
 const PORT = process.env.PORT || 8080;
 mongoose
