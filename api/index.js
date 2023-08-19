@@ -4,9 +4,13 @@ const mongoose = require("mongoose");
 const User = require("./model/userModel");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
+const { encode } = require("blurhash");
+const sharp = require("sharp");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const nodemailer = require("nodemailer");
+const Mailgen = require("mailgen");
 const app = express();
 
 // middlewares
@@ -228,6 +232,108 @@ app.get("/current_loggedInUser", async (req, res) => {
     res.status(224).json(verifiedUserToken);
   } catch (error) {
     console.error("error in line244", error);
+    res.status(400).json(error);
+  }
+});
+
+// post route to send the confirmation mail to the user with apassword reset link
+app.post("/user/request/reset_password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // find the userdocument with the email
+    const foundUserDoc = await User.findOne({ email });
+    if (!foundUserDoc)
+      return res.json({
+        name: "Document not found",
+        message: "User doesn't exsits",
+      });
+
+    // if userDoc is found then create a unique token only for password reseting
+    const JWT_SECRET = process.env.JWT_SECRET + foundUserDoc.password;
+
+    // create a token
+    const resetPasswordToken = jwt.sign(
+      {
+        id: foundUserDoc._id,
+        email: foundUserDoc.email,
+      },
+      JWT_SECRET,
+      { expiresIn: "10m" }
+    );
+    const emailUrlLink = `http://localhost:8080/request/authenticate_url/${foundUserDoc._id}/${resetPasswordToken}`;
+
+    // create a config option for gmail
+    const mailServiceConfig = {
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_ID,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    };
+
+    // create a transporter with th config options
+    const transporter = nodemailer.createTransport(mailServiceConfig);
+
+    // define the mailgen object
+    const mailGenerator = new Mailgen({
+      theme: "default",
+      product: {
+        // appears in header and footer
+        name: "Auth",
+        link: "http://localhost:5173",
+        // logo: "your product logo",
+      },
+    });
+    // create a mail body
+    const response = {
+      body: {
+        name: foundUserDoc.userName,
+        intro: [
+          "<h1>Reset password</h1>",
+          "A password change has been requested for your account. If this was you, please use the link below to reset your password.",
+          "This link is valid for only 10minutes",
+        ],
+        action: {
+          button: {
+            color: "#48bb78",
+            text: "Reset password",
+            link: emailUrlLink,
+          },
+        },
+        outro:
+          "If you did not request a password reset, no further action is required on your part.",
+      },
+    };
+    // create the mail body with the given html
+    const mail = mailGenerator.generate(response);
+
+    // send mail details from, to, subject, mail body
+    const emailConfig = {
+      // specify the same email as emailConfig,
+      // if you don't the emails will be moved to spam folder by default
+      from: {
+        name: "Auth",
+        address: process.env.GMAIL_ID,
+      },
+      to: email,
+      subject: "Change password of your Auth account",
+      html: mail,
+    };
+
+    transporter
+      .sendMail(emailConfig)
+      .then(() => {
+        return res.status(224).json({
+          name: "NodeMail Success",
+          message: "Mail sent successfully",
+        });
+      })
+      .catch((error) => {
+        return res.status(400).json(error);
+      });
+  } catch (error) {
+    console.error("error in line346", error);
     res.status(400).json(error);
   }
 });
