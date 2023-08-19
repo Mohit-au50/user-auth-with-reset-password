@@ -438,10 +438,14 @@ app.put("/user/update_password", async (req, res) => {
 // logout route
 app.post("/user/logout", (req, res) => {
   try {
-    res
-      .clearCookie("loggedUser", { expires: new Date(0) })
-      .status(224)
-      .json({ name: "Logout", message: "Logout Success" });
+    const cookies = Object.keys(req.cookies);
+
+    cookies.forEach((cookieName) => {
+      res.clearCookie(cookieName, { expires: new Date(0) });
+    });
+
+    // Return a response indicating successful logout
+    res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("error in line447", error);
     res.status(400).json(error);
