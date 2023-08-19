@@ -6,6 +6,7 @@ const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const app = express();
 
 // middlewares
@@ -152,6 +153,59 @@ app.post("/user/signup", upload.single("avatar"), async (req, res) => {
       });
   } catch (error) {
     console.error("Error in line 169", error);
+    res.status(400).json(error);
+  }
+});
+
+// login route
+app.post("/user/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const foundUserDoc = await User.findOne({ email });
+
+    // verify the user password with database password
+    const verifyUserPassword = await bcrypt.compare(
+      password.toString(),
+      foundUserDoc.password
+    );
+    if (!verifyUserPassword)
+      return res.json({
+        name: "passwordError",
+        message: "Wrong password",
+      });
+
+    // if password is matched then create a token for the log in the user
+    const loggedUser = jwt.sign(
+      {
+        avatar: foundUserDoc.avatar,
+        blur_hash: foundUserDoc.blur_hash,
+        email: foundUserDoc.email,
+        id: foundUserDoc._id,
+        userName: foundUserDoc.userName,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "6h" }
+    );
+
+    const expirationTime = new Date(Date.now() + 6 * 60 * 60 * 1000);
+    res
+      .cookie("loggedUser", loggedUser, {
+        expires: expirationTime,
+        sameSite: "none",
+        secure: true,
+      })
+      .status(224)
+      .json({
+        avatar: foundUserDoc.avatar,
+        blur_hash: foundUserDoc.blur_hash,
+        cookieToken: "generated",
+        email: foundUserDoc.email,
+        id: foundUserDoc._id,
+        userName: foundUserDoc.userName,
+      });
+  } catch (error) {
+    console.error("error in /user/login", error);
     res.status(400).json(error);
   }
 });
