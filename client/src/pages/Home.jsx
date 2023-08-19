@@ -15,7 +15,8 @@ const Home = ({ userName, email, avatar, blur_hash }) => {
       const res = await axios.post("/user/logout");
       console.log(res);
 
-      if (res.status === 224) {
+      if (res.status === 200) {
+        toast("logout");
         setLoggedInUser(null);
       } else {
         toast.error(res.data);
