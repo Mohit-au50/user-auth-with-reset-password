@@ -436,7 +436,7 @@ app.put("/user/update_password", async (req, res) => {
 });
 
 // logout route
-app.delete("/user/logout", (req, res) => {
+app.get("/user/logout", (req, res) => {
   try {
     return res
       .clearCookie("loggedUser", { expires: new Date(0) })
