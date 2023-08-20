@@ -12,7 +12,7 @@ const Home = ({ userName, email, avatar, blur_hash }) => {
 
   const handleLogout = async () => {
     try {
-      const res = await axios.post("/user/logout");
+      const res = await axios.get("/get/logout");
       console.log(res);
 
       if (res.status === 200) {
