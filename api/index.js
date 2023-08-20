@@ -435,21 +435,13 @@ app.put("/user/update_password", async (req, res) => {
   }
 });
 
-app.post("/user/logout", (req, res) => {
+// logout route
+app.get("/get/logout", (req, res) => {
   try {
     return res
       .clearCookie("loggedUser", { expires: new Date(0) })
       .status(200)
-      .redirect(`${process.env.BACKEND_URL}/get/Logout`);
-  } catch (error) {
-    console.error("error in line447", error);
-    res.status(400).json(error);
-  }
-});
-// logout route
-app.get("/get/logout", (req, res) => {
-  try {
-    return res.json({ message: "Logout successful" });
+      .json({ message: "Logout successful" });
   } catch (error) {
     console.error("error in line447", error);
     res.status(400).json(error);
