@@ -439,7 +439,7 @@ app.put("/user/update_password", async (req, res) => {
 app.delete("/user/logout", (req, res) => {
   try {
     return res
-      .clearCookie(loggedUser, { expires: new Date(0) })
+      .clearCookie("loggedUser", { expires: new Date(0) })
       .status(200)
       .json({ message: "Logout successful" });
   } catch (error) {
